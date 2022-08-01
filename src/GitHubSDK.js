@@ -5,27 +5,30 @@ export class GitHubSDK {
         this.nickName = nickName
     }
 
-    sendInvitation(repositoryName, collaboratorName) {
-
-        const invitationUrl = `${this.url}/repos/${this.nickName}/${repositoryName}/collaborators/${collaboratorName}`
+    getUser() {
+        const userUrl = `${this.url}/user`
         const options = {
-            method: 'PUT',
-            credentials: 'same-origin',
-            redirect: 'follow',
-            headers: this.getAuthorizationHeader(),
-            body: JSON.stringify({
-                permission: 'pull'
-            }),
+            headers: this.getAuthorizationHeader()
         }
-        return this._fetch(invitationUrl, options)
+        return this._fetch(userUrl, options)
     }
 
-    _fetch(url, options) {
-        return fetch(url, options)
-            .then(resp => {
-                if (resp.ok) return resp.json()
-                return Promise.reject('Failed to load!')
-            })
+    getRepositories() {
+        const repositoriesUrl = `${this.url}/user/repos?page=1&per_page=100&affiliation=owner`
+        const options = {
+            headers: this.getAuthorizationHeader()
+        }
+        return this._fetch(repositoriesUrl, options)
+    }
+
+    getUnauthorizedRepositories() {
+        const repositoriesUrl = `${this.url}/users/${this.nickName}/repos?page=1&per_page=100&affiliation=owner`
+        return this._fetch(repositoriesUrl)
+    }
+
+    getUnauthorizedUser() {
+        const userUrl = `${this.url}/users/${this.nickName}`
+        return this._fetch(userUrl)
     }
 
     getAuthorizationHeader() {
@@ -35,6 +38,15 @@ export class GitHubSDK {
         }
     }
 
+    _fetch(url, options = { headers: { Accept: 'application/vnd.github.v3+json' } }) {
+        return fetch(url, options)
+            .then(resp => {
+                if (resp.ok) return resp.json()
+                if (resp.status === 401) return Promise.reject('Authentication not passing with current token!')
+                if (resp.status === 404) return Promise.reject('User not found!')
+                if (resp.status >= 400) return Promise.reject('Something went wrong!')
+            })
+    }
 }
 
 export default GitHubSDK
