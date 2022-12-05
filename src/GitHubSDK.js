@@ -42,9 +42,9 @@ export class GitHubSDK {
         return fetch(url, options)
             .then(resp => {
                 if (resp.ok) return resp.json()
-                if (resp.status === 401) return Promise.reject('Authentication not passing with current token!')
-                if (resp.status === 404) return Promise.reject('User not found!')
-                if (resp.status >= 400) return Promise.reject('Something went wrong!')
+                if (resp.status === 401) throw new Error('Authentication not passing with current token!')
+                if (resp.status === 404) throw new Error('User not found!')
+                if (resp.status >= 400) throw new Error('Something went wrong!')
             })
     }
 }
