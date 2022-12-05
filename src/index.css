@@ -26,6 +26,11 @@ figcaption{
     text-align: center;
 }
 
+input {
+    border: 1px solid rgba(0,0,0,0.3);
+    padding: 0.3rem 0.3rem 0.3rem 0.5rem;
+}
+
 .fullWidth {
     width: 100%;
 }
@@ -117,9 +122,66 @@ figcaption{
     flex-wrap: wrap;
     max-width: 300px;
     justify-items: center;
+    font-size: 1.25rem;
+    letter-spacing: 0.5px;
 }
 
 .user__avatar{
     width: 250px;
 }
+
+
 /*END - User data Styling */
+
+
+/*START - GitHub form data Styling */
+.github-form{
+    padding: 2rem;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    flex-wrap: wrap;
+}
+
+.github-form__button{
+    border: none;
+    font-weight: bold;
+    font-family: monospace;
+    font-size: 1rem;
+    padding: 0.5rem 0.8rem;
+    margin: 0.1rem;
+    cursor: pointer;
+}
+
+.github-form__button--submit{
+    background-color: #99C24D;
+    transition: all 0.3s ease-out;
+    color: white;
+}
+
+.github-form__button--submit:hover{
+    background-color: #57A773;
+}
+
+
+.github-form__button--clear{
+    background-color: #C73E1D;
+    transition: all 0.3s ease-out;
+    color: white;
+}
+
+.github-form__button--clear:hover{
+    background-color: #A41D13;
+}
+
+.github-form__buttons-container{
+    padding-top: 1rem;
+    display: flex;
+    justify-content: center;
+}
+
+.error-message{
+    color: red;
+    text-align: center;
+}
+/*END - GitHub form data Styling */

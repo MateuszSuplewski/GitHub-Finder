@@ -1,159 +1,120 @@
 import GitHubSDK from './GitHubSDK'
 import './index.css'
+import {createLinkEl, createContentEl, createFigureEl, createListEl, insertDataToEl} from './helper'
 
-const token = process.env.REACT_APP_TOKEN
-const gh2 = new GitHubSDK(token, 'MateuszSuplewski')
+const form = document.querySelector('form')
+const errorEl = document.querySelector('.error-message')
+const userContainer = document.querySelector('.user__container')
+const repositoryListContainer = document.querySelector('.repositories')
 
-gh2.getUser()
-  .then(data => insertUserData(data))
-  .catch(error => error.message)
+window.addEventListener('DOMContentLoaded', () => init())
 
-gh2.getRepositories()
-  .then(data => insertRepositoriesData(data))
-  .catch(error => error.message)
+const init = () => {
+  const token = process.env.REACT_APP_TOKEN
+  const ghAuth = new GitHubSDK(token, '')
+  ghAuth
+    .getUser()
+    .then((data) => insertUserData(data))
+    .catch((error) => (errorEl.innerText = error.message))
 
-// gh2.getUnauthorizedUser()
-//   .then(data => console.log(data))
-//   .catch(error => error.message)
+  ghAuth
+    .getRepositories()
+    .then((data) => insertRepositoriesData(data))
+    .catch((error) => (errorEl.innerText = error.message))
+}
 
-// gh2.getUnauthorizedRepositories()
-//   .then(data => console.log(data))
-//   .catch(error => error.message)
+form.addEventListener('submit', (e) => {
+  e.preventDefault()
+
+  userContainer.innerHTML = ''
+  repositoryListContainer.innerHTML = ''
+  errorEl.innerText = ''
+  const ghNickname = form.elements['ghNickname'].value
+
+  const ghUnAuth = new GitHubSDK('', ghNickname)
+
+  ghUnAuth
+    .getUnauthorizedUser()
+    .then((data) => insertUserData(data))
+    .catch((error) => (errorEl.innerText = error.message))
+
+  ghUnAuth
+    .getUnauthorizedRepositories()
+    .then((data) => insertRepositoriesData(data))
+    .catch((error) => (errorEl.innerText = error.message))
+})
 
 const insertUserData = (data) => {
-  const { avatar_url, total_private_repos, email, followers, following, login, name, public_repos } = data
+  const {avatar_url, total_private_repos = '', email = '', followers, following, login, name, public_repos} = data
   const userData = [
     {
       description: 'Name',
-      content: name
+      content: name,
     },
     {
       description: 'Followers',
-      content: followers
+      content: followers,
     },
     {
       description: 'Following',
-      content: following
+      content: following,
     },
     {
       description: 'Public repositories',
-      content: public_repos
+      content: public_repos,
     },
     {
       description: 'Private repositories',
-      content: total_private_repos
+      content: total_private_repos,
     },
     {
       description: 'Contact',
-      content: email
-    }
+      content: email,
+    },
   ]
 
-  const userContainerEl = document.querySelector('.user__container')
-  const userInfoContainerEl = document.querySelector('.user-info__container')
+  const userAvatar = createFigureEl(avatar_url, login, ['user__avatar', ''])
+  userContainer.appendChild(userAvatar)
 
-  const userAvatarEl = createFigureEl(avatar_url,login,['user__avatar',''])
-  userContainerEl.appendChild(userAvatarEl)
+  const userDataContainer = createContentEl('div', '', ['user-info__container'])
 
-  userData.forEach(({description,content}) => {
-    if(content){
-      const informationParagraph = createParagraphEl(description, content, 'fullWidth')
-      userInfoContainerEl.appendChild(informationParagraph)
+  userData.forEach(({description, content}) => {
+    if (content !== '' && content !== null) {
+      const textContent = `${description} : ${content}`
+      const informationParagraph = createContentEl('p', textContent, ['fullWidth'])
+      userDataContainer.appendChild(informationParagraph)
     }
   })
-   
-  userContainerEl.appendChild(userInfoContainerEl)
+
+  userContainer.appendChild(userDataContainer)
 }
 
 const insertRepositoriesData = (data) => {
-  const repositoryListContainerEl = document.querySelector('.repositories')
-  
-  data.forEach(repository => {
-    const {topics, html_url,visibility,name,language, has_pages, owner} = repository
+  data.forEach((repository) => {
+    const {topics, html_url, visibility, name, language, has_pages, owner} = repository
     const {login} = owner
-  
-    const repositoryContainerEl = document.createElement('div')
-    const repositoryNameEl = document.createElement('h4')
-    const repositoryLinkEl = createLinkEl(html_url,'Repository',['repository__link', 'repository__link--blue','halfWidth'])
-    const repositoryMainLanguageEl = document.createElement('p')
-    const repositoryVisibilityEl = document.createElement('p')
 
-    repositoryNameEl.innerText = name
-    repositoryMainLanguageEl.innerText = language ? `Mainly used language : ${language}` : ''
-    repositoryVisibilityEl.innerText = `Repository status : ${visibility}`
+    const repositoryContainer = createContentEl('div', '', ['repository__container'])
+    const repositoryName = createContentEl('h4', name, ['repository__name', 'fullWidth'])
+    const repositoryLink = createLinkEl(html_url, 'Repository', ['repository__link', 'repository__link--blue', 'halfWidth'])
+    const repositoryMainLanguage = createContentEl('p', `Mainly used language: ${language}`, ['fullWidth'])
+    const repositoryVisibility = createContentEl('p', `Repository status: ${visibility}`, ['fullWidth'])
 
+    insertDataToEl([repositoryName, repositoryMainLanguage, repositoryVisibility], repositoryContainer)
 
-    repositoryContainerEl.appendChild(repositoryNameEl)
-    repositoryContainerEl.appendChild(repositoryMainLanguageEl)
-    repositoryContainerEl.appendChild(repositoryVisibilityEl)
-    if(topics.length > 0) insertTopicsListEl(topics,repositoryContainerEl)
-    repositoryContainerEl.appendChild(repositoryLinkEl)
-    repositoryListContainerEl.appendChild(repositoryContainerEl)
-
-    if(has_pages){
-      const livePreviewUrl = `https://${login}.github.io/${name}/`
-      const livePreviewLinkEl = createLinkEl(livePreviewUrl,'Live Preview',['repository__link', 'repository__link--yellow','halfWidth'])
-      repositoryContainerEl.appendChild(livePreviewLinkEl)
+    if (topics.length > 0) {
+      const [repositoryTopicListParagraphEl, repositoryTopicListEl] = createListEl(topics, 'Project topics', ['fullWidth'], ['fullWidth'], [])
+      insertDataToEl([repositoryTopicListParagraphEl, repositoryTopicListEl], repositoryContainer)
     }
 
+    insertDataToEl([repositoryLink], repositoryContainer)
 
-    repositoryContainerEl.classList.add('repository__container')
-    repositoryNameEl.classList.add('repository__name', 'fullWidth')
-    repositoryMainLanguageEl.classList.add('fullWidth')
-    repositoryVisibilityEl.classList.add('fullWidth')
+    if (has_pages) {
+      const livePreviewUrl = `https://${login}.github.io/${name}/`
+      const livePreviewLinkEl = createLinkEl(livePreviewUrl, 'Live Preview', ['repository__link', 'repository__link--yellow', 'halfWidth'])
+      repositoryContainer.appendChild(livePreviewLinkEl)
+    }
+
+    repositoryListContainer.appendChild(repositoryContainer)
   })
-}
-
-const insertTopicsListEl = (topics,container) => {
-    const repositoryTopicListParagraphEl = document.createElement('p')
-    const repositoryTopicListEl = document.createElement('ul')
-
-    repositoryTopicListParagraphEl.innerText = 'Project topics : '
-
-    topics.forEach(topic => {
-      const repositoryTopicEl = document.createElement('li')
-      repositoryTopicEl.innerText = topic
-      repositoryTopicListEl.appendChild(repositoryTopicEl)
-    })
-
-    repositoryTopicListParagraphEl.classList.add('fullWidth')
-    repositoryTopicListEl.classList.add('fullWidth')
-    container.appendChild(repositoryTopicListParagraphEl)
-    container.appendChild(repositoryTopicListEl)
-
-}
-
-
-const createLinkEl = (url,content,classNames) => {
-  const linkEl = document.createElement('a')
-  linkEl.innerText = content
-  linkEl.setAttribute('href',url)
-  linkEl.classList.add(...classNames)
-  return linkEl
-}
-
-
-const createParagraphEl = (description,content, className) => {
-  const paragraphEl = document.createElement('p')
-  paragraphEl.innerText = description + ' : ' + content
-  if(className) paragraphEl.classList.add(className) 
-
-  return paragraphEl
-}
-
-const createFigureEl = (imgUrl,captionText,classNames) => {
-  const [imgClass,captionClass] = classNames
-
-  const figureEl = document.createElement('figure')
-  const imageEl = document.createElement('img')
-  const captionEl = document.createElement('figcaption')
-
-  imageEl.setAttribute('src',imgUrl)
-  captionEl.innerText = captionText
-
-  figureEl.appendChild(imageEl)
-  figureEl.appendChild(captionEl)
-  if(imgClass) imageEl.classList.add(imgClass)
-  if(captionClass) captionEl.classList.add(captionClass)
-  return figureEl
 }

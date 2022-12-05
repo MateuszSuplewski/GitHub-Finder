@@ -4,14 +4,23 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>React App</title>
+  <title>GitHubSDK - Explore github profiles</title>
 </head>
 
 <body>
   <div id="root">
+    <form method="POST" class="github-form">
+      <label>
+        Github Login:
+        <input type="text" placeholder="GitHub NickName" name="ghNickname" id="ghNickname" required>
+      </label>
+      <div class="fullWidth github-form__buttons-container">
+        <input type="submit" value="Search" class="github-form__button github-form__button--submit ">
+        <input type="reset" value="Clear" class="github-form__button github-form__button--clear">
+      </div>
+    </form>
+    <div class="error-message"></div>
   <div class="user__container">
-    <div class="user-info__container">
-
     </div>
   </div>
   <div class="repositories"></div>
